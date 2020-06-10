@@ -9,12 +9,29 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 )
 
 type Message struct {
 	Time  string `json:time`
 	Msg   string `json:msg`
 	Block int64  `json:block`
+}
+
+type Stage byte
+
+const (
+	Propose Stage = iota
+	EnoughPrepare
+	EnoughCommit
+	StartGrace
+	EndGrace
+	Hooray
+)
+
+type Consensus struct {
+	Timestamp time.Time
+	Stage     Stage
 }
 
 func parseLog(logfile string) {
@@ -42,6 +59,33 @@ func parseLog(logfile string) {
 		} else {
 			blockNum = m.Block
 		}
+
+		var consensus Consensus
+
+		t, err := time.Parse(time.RFC3339, m.Time)
+		if err != nil {
+			log.Fatal("Invalid timestamp")
+		}
+		consensus.Timestamp = t
+		if strings.Contains(m.Msg, "PROPOSING") {
+			consensus.Stage = Propose
+		}
+		if strings.Contains(m.Msg, "Enough Prepare") {
+			consensus.Stage = EnoughPrepare
+		}
+		if strings.Contains(m.Msg, "Enough commits") {
+			consensus.Stage = EnoughCommit
+		}
+		if strings.Contains(m.Msg, "Starting Grace") {
+			consensus.Stage = StartGrace
+		}
+		if strings.Contains(m.Msg, "Commit Grace") {
+			consensus.Stage = EndGrace
+		}
+		if strings.Contains(m.Msg, "HOORAY") {
+			consensus.Stage = Hooray
+		}
+
 		fmt.Printf("%v:%s => %s\n", m.Block, m.Time, m.Msg)
 	}
 }
