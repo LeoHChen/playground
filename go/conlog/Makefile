@@ -1,9 +1,12 @@
-bin: analyze.go
-	go build -o analyze analyze.go
+BIN:=analyze
 
-all: bin
+bin: analyze.go
+	go build -o $(BIN) analyze.go
 
 clean:
 	goimports -w analyze.go
+	rm -f $(BIN)
 
-.PHONY: bin
+all: bin
+
+.PHONY: bin clean

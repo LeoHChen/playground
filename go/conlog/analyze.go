@@ -113,8 +113,10 @@ func parseLog(logfile string) {
 	}
 	sort.Ints(blocks)
 
+	fmt.Println("block, consensus, prepare, commit, grace, finalize")
 	for _, k := range blocks {
-		fmt.Printf("%v, %v, %v\n", consensusMap[k].Propose, consensusMap[k].Hooray, consensusMap[k].Hooray.Sub(consensusMap[k].Propose))
+		c := consensusMap[k]
+		fmt.Printf("%v, %v, %v, %v, %v, %v\n", k, c.Hooray.Sub(c.Propose), c.EnoughPrepare.Sub(c.Propose), c.EnoughCommit.Sub(c.EnoughPrepare), c.EndGrace.Sub(c.StartGrace), c.Hooray.Sub(c.EndGrace))
 	}
 }
 
