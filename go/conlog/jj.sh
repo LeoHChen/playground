@@ -8,5 +8,8 @@ if [ -z $FILE ]; then
 fi
 
 OUT=${FILE##consensus.}
+CSV=${OUT%%.log}.csv
 
 jq -c '{time:.time, block:.blockNum, msg:.message}' $FILE > $OUT
+
+./analyze -logfile $OUT > $CSV

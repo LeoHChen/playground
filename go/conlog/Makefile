@@ -7,6 +7,12 @@ clean:
 	goimports -w analyze.go
 	rm -f $(BIN)
 
+DIR=.
+analysis: $(DIR)/consensus.*.log
+	for file in $^ ; do \
+		./jj.sh $${file}; \
+	done
+
 all: bin
 
 .PHONY: bin clean
