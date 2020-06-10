@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"sort"
 	"strings"
 	"time"
 )
@@ -15,9 +16,10 @@ import (
 type Message struct {
 	Time  string `json:time`
 	Msg   string `json:msg`
-	Block int64  `json:block`
+	Block int    `json:block`
 }
 
+/*
 type Stage byte
 
 const (
@@ -28,10 +30,15 @@ const (
 	EndGrace
 	Hooray
 )
+*/
 
 type Consensus struct {
-	Timestamp time.Time
-	Stage     Stage
+	Propose       time.Time
+	EnoughPrepare time.Time
+	EnoughCommit  time.Time
+	StartGrace    time.Time
+	EndGrace      time.Time
+	Hooray        time.Time
 }
 
 func parseLog(logfile string) {
@@ -42,7 +49,9 @@ func parseLog(logfile string) {
 	defer file.Close()
 	scanner := bufio.NewScanner(file)
 
-	var blockNum int64
+	var blockNum int
+	var consensusMap = make(map[int]*Consensus)
+
 	for scanner.Scan() {
 		line := strings.NewReader(scanner.Text())
 		dec := json.NewDecoder(line)
@@ -60,33 +69,52 @@ func parseLog(logfile string) {
 			blockNum = m.Block
 		}
 
-		var consensus Consensus
+		var consensus *Consensus
+		var ok bool
+		consensus, ok = consensusMap[m.Block]
+		if !ok {
+			consensusMap[m.Block] = new(Consensus)
+		}
+		consensus, _ = consensusMap[m.Block]
 
 		t, err := time.Parse(time.RFC3339, m.Time)
 		if err != nil {
 			log.Fatal("Invalid timestamp")
 		}
-		consensus.Timestamp = t
 		if strings.Contains(m.Msg, "PROPOSING") {
-			consensus.Stage = Propose
+			consensus.Propose = t
+			continue
 		}
 		if strings.Contains(m.Msg, "Enough Prepare") {
-			consensus.Stage = EnoughPrepare
+			consensus.EnoughPrepare = t
+			continue
 		}
 		if strings.Contains(m.Msg, "Enough commits") {
-			consensus.Stage = EnoughCommit
+			consensus.EnoughCommit = t
+			continue
 		}
 		if strings.Contains(m.Msg, "Starting Grace") {
-			consensus.Stage = StartGrace
+			consensus.StartGrace = t
+			continue
 		}
 		if strings.Contains(m.Msg, "Commit Grace") {
-			consensus.Stage = EndGrace
+			consensus.EndGrace = t
+			continue
 		}
 		if strings.Contains(m.Msg, "HOORAY") {
-			consensus.Stage = Hooray
+			consensus.Hooray = t
+			continue
 		}
+	}
 
-		fmt.Printf("%v:%s => %s\n", m.Block, m.Time, m.Msg)
+	var blocks []int
+	for k := range consensusMap {
+		blocks = append(blocks, k)
+	}
+	sort.Ints(blocks)
+
+	for _, k := range blocks {
+		fmt.Printf("%v, %v, %v\n", consensusMap[k].Propose, consensusMap[k].Hooray, consensusMap[k].Hooray.Sub(consensusMap[k].Propose))
 	}
 }
 
