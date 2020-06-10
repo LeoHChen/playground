@@ -116,11 +116,11 @@ func parseLog(logfile string) {
 	fmt.Println("block, consensus, prepare, commit, grace, finalize")
 	for _, k := range blocks {
 		c := consensusMap[k]
-		conT := c.Hooray.Sub(c.Propose)
-		preT := c.EnoughPrepare.Sub(c.Propose)
-		comT := c.EnoughCommit.Sub(c.EnoughPrepare)
-		graT := c.EndGrace.Sub(c.StartGrace)
-		finT := c.Hooray.Sub(c.EndGrace)
+		conT := c.Hooray.Sub(c.Propose).Milliseconds()
+		preT := c.EnoughPrepare.Sub(c.Propose).Milliseconds()
+		comT := c.EnoughCommit.Sub(c.EnoughPrepare).Milliseconds()
+		graT := c.EndGrace.Sub(c.StartGrace).Milliseconds()
+		finT := c.Hooray.Sub(c.EndGrace).Milliseconds()
 
 		over := conT * preT * comT * graT * finT
 
