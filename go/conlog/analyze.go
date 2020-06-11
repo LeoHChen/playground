@@ -19,25 +19,13 @@ type Message struct {
 	Block int    `json:block`
 }
 
-/*
-type Stage byte
-
-const (
-	Propose Stage = iota
-	EnoughPrepare
-	EnoughCommit
-	StartGrace
-	EndGrace
-	Hooray
-)
-*/
-
 type Consensus struct {
 	Propose       time.Time
 	EnoughPrepare time.Time
 	EnoughCommit  time.Time
 	StartGrace    time.Time
 	EndGrace      time.Time
+	OneHundred    time.Time
 	Hooray        time.Time
 }
 
@@ -89,8 +77,12 @@ func parseLog(logfile string) {
 			consensus.EnoughPrepare = t
 			continue
 		}
-		if strings.Contains(m.Msg, "Enough commits") {
+		if strings.Contains(m.Msg, "2/3 Enough commits") {
 			consensus.EnoughCommit = t
+			continue
+		}
+		if strings.Contains(m.Msg, "100% Enough commits") {
+			consensus.OneHundred = t
 			continue
 		}
 		if strings.Contains(m.Msg, "Starting Grace") {
@@ -113,14 +105,22 @@ func parseLog(logfile string) {
 	}
 	sort.Ints(blocks)
 
-	fmt.Println("block, consensus, prepare, commit, grace, finalize")
+	fmt.Println("block, consensus, prepare, commit, grace, 100%, finalize")
 	for _, k := range blocks {
 		c := consensusMap[k]
-		conT := c.Hooray.Sub(c.Propose).Milliseconds()
-		preT := c.EnoughPrepare.Sub(c.Propose).Milliseconds()
-		comT := c.EnoughCommit.Sub(c.EnoughPrepare).Milliseconds()
-		graT := c.EndGrace.Sub(c.StartGrace).Milliseconds()
-		finT := c.Hooray.Sub(c.EndGrace).Milliseconds()
+		var conT, preT, comT, hunT, graT, finT int64
+		if !c.Hooray.IsZero() {
+			conT = c.Hooray.Sub(c.Propose).Milliseconds()
+		}
+		preT = c.EnoughPrepare.Sub(c.Propose).Milliseconds()
+		comT = c.EnoughCommit.Sub(c.EnoughPrepare).Milliseconds()
+		if !c.OneHundred.IsZero() {
+			hunT = c.OneHundred.Sub(c.EnoughCommit).Milliseconds()
+		}
+		if !c.EndGrace.IsZero() {
+			graT = c.EndGrace.Sub(c.StartGrace).Milliseconds()
+		}
+		finT = c.Hooray.Sub(c.EndGrace).Milliseconds()
 
 		over := conT * preT * comT * graT * finT
 
@@ -128,7 +128,7 @@ func parseLog(logfile string) {
 			continue
 		}
 
-		fmt.Printf("%v, %v, %v, %v, %v, %v\n", k, conT, preT, comT, graT, finT)
+		fmt.Printf("%v, %v, %v, %v, %v, %v, %v\n", k, conT, preT, comT, graT, hunT, finT)
 	}
 }
 
