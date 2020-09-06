@@ -1,0 +1,25 @@
+{
+  "hash": "0000000000000000189bba3564a63772107b5673c940c16f12662b3e8546b412",
+  "height": 294322,
+  "chain": "BTC.main",
+  "total": 1146652915,
+  "fees": 130999,
+  "size": 7787,
+  "ver": 2,
+  "time": "2014-04-05T07:49:18Z",
+  "received_time": "2014-04-05T07:49:18Z",
+  "coinbase_addr": "",
+  "relayed_by": "",
+  "bits": 419486617,
+  "nonce": 1225187768,
+  "n_tx": 10,
+  "prev_block": "0000000000000000ced0958bd27720b71d32c5847e40660aaca39f33c298abb0",
+  "mrkl_root": "359d624d37aee1efa5662b7f5dbc390e996d561afc8148e8d716cf6ad765a952",
+  "txids": [
+    "32b3b86e40d996b1f281e24e8d4af2ceacbf874c4038369cc21baa807409b277"
+  ],
+  "depth": 352602,
+  "prev_block_url": "https://api.blockcypher.com/v1/btc/main/blocks/0000000000000000ced0958bd27720b71d32c5847e40660aaca39f33c298abb0",
+  "tx_url": "https://api.blockcypher.com/v1/btc/main/txs/",
+  "next_txids": "https://api.blockcypher.com/v1/btc/main/blocks/0000000000000000189bba3564a63772107b5673c940c16f12662b3e8546b412?txstart=1\u0026limit=1"
+}
