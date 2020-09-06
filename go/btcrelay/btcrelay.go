@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	// "encoding/binary"
+	"crypto/sha256"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -11,6 +12,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"time"
 	//	"github.com/btcsuite/btcutil"
 )
@@ -71,6 +73,29 @@ func createHeader(block Block) ([]byte, error) {
 	return buf.Bytes(), err
 }
 
+func writeToFile(filename string, data []byte) {
+	file, err := os.OpenFile(
+		filename, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0666,
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	written, err := file.Write(data)
+	if err != nil {
+		log.Fatal(err)
+	}
+	logger.Printf("written: %v\n", written)
+}
+
+func getShaSha(data []byte) {
+	s1 := sha256.Sum256(data)
+	fmt.Printf("s1:%x\n", s1)
+	s2 := sha256.Sum256(s1[:])
+	fmt.Printf("s2:%x\n", s2)
+}
+
 var (
 	buf    bytes.Buffer
 	logger = log.New(&buf, "logger: ", log.Lshortfile)
@@ -79,6 +104,7 @@ var (
 func main() {
 	endpoint := flag.String("endpoint", "https://api.blockcypher.com/v1/btc/main/blocks/", "end point of the query")
 	blockheight := flag.Uint64("blockheight", 646880, "block height")
+	output := flag.String("output", "", "output file of the block header")
 	debug := flag.Bool("debug", true, "debug output")
 
 	flag.Parse()
@@ -116,6 +142,11 @@ func main() {
 			logger.Printf("create header error: %v\n", err)
 		} else {
 			logger.Printf("header: %x\n", header)
+			getShaSha(header)
+
+			if len(*output) > 0 {
+				writeToFile(*output, header)
+			}
 		}
 	}
 
